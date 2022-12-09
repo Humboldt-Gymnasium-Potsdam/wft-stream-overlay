@@ -7,6 +7,7 @@ const obs = new OBSWebSocket();
 const host = 'localhost';
 const port = 8000;
 
+// Overlay variables
 let startTimerMinutes = 6;
 let startTimerSeconds = 0;
 
@@ -25,29 +26,86 @@ let timerPaused = false;
 let timerEnded = false;
 let isRunning = false;
 
+// UI variables
+let indexFile;
 
 await obs.connect('ws://localhost:4455');
 
-const result = await obs.call("GetSceneItemList", {sceneName: "OverlayScene"});
+const overlayScene = await obs.call("GetSceneItemList", {sceneName: "OverlayScene"});
+const previewScene = await obs.call("GetSceneItemList", {sceneName: "Preview"});
 
-const timerSource = result.sceneItems.find(source => source.sourceName === "Timer");
-const scoreSource = result.sceneItems.find(source => source.sourceName === "Score");
+const timerSource = overlayScene.sceneItems.find(source => source.sourceName === "Timer");
+const scoreSource = overlayScene.sceneItems.find(source => source.sourceName === "Score");
 
-const leftTeamSource = result.sceneItems.find(source => source.sourceName === "Team1");
-const rightTeamSource = result.sceneItems.find(source => source.sourceName === "Team2");
+const leftTeamSource = overlayScene.sceneItems.find(source => source.sourceName === "Team1");
+const rightTeamSource = overlayScene.sceneItems.find(source => source.sourceName === "Team2");
+
+const leftTeamPreview = previewScene.sceneItems.find(source => source.sourceName === "NextTeam1");
+const rightTeamPreview = previewScene.sceneItems.find(source => source.sourceName === "NextTeam2");
+const gameType = previewScene.sceneItems.find(source => source.sourceName === "Gametype");
 
 const requestListener = function (req, res) {
-    res.setHeader("Content-Type", "application/json");
-    res.writeHead(200);
-    res.end(`{"message": "This is a JSON response"}`);
-};
+    switch (req.url) {
+        case "/" || "":
+            res.setHeader("Content-Type", "text/html");
+            res.writeHead(200);
+            res.end(indexFile);
+            break;
+        
+        case "/api/nextGame":
+            break;
 
+        case "/api/startGame":
+            break;
+
+        case "/api/addMatch":
+            break;
+
+        case "/api/updateMatch":
+            break;
+        
+        case "/api/deleteMatch":
+            break;
+
+        case "/api/setNextMatch":
+            break;
+
+        case "/api/setTimer":
+            break;
+
+        case "/api/matches":
+            break;
+
+        case "/api/gamePreviewScene":
+            break;
+        
+        case "/api/getMatchStatus":  // Paused? Ended?
+            break;
+
+        case "/api/pauseMatch":  // Pause and continue
+            break;
+        
+        case "/api/setScore":
+            break;
+        
+        case "/api/getScore":
+            break;
+    }
+};
 const server = http.createServer(requestListener);
-server.listen(port, host, () => {
-    console.log(`Server is running on http://${host}:${port}`);
+fs.readFile("index.html", contents => {
+    indexFile = contents;
+    
+    server.listen(port, host, () => {
+        console.log(`Server is running on http://${host}:${port}`);
+    });
 });
 
-// Overlay Management
+
+// ----------------------
+// - Overlay Management -
+// ----------------------
+
 async function increaseLeftScore() {
     leftScore++;
 
@@ -92,15 +150,34 @@ async function setCurrentTeams(teamData) {
     await obs.call("SetInputSettings", {inputName: rightTeamSource.sourceName, inputSettings: {text: teamInformation[2]}});
 }
 
-function hintNextMatch() {
+async function hintNextMatch() {
     // Update Overlay
+    let nextMatchData = matchesData[currentGameIndex + 1];
 }
 
-function showGamePreview() {
-
+async function nextGame() {
+    currentGameIndex++;
+    await loadGameData(currentGameIndex);
 }
 
-// Timer Management
+async function loadGameData(matchIndex) {
+    const matchInformation = matchesData[matchIndex];
+
+    // Update Overlay
+    await obs.call("SetInputSettings", {inputName: leftTeamSource.sourceName, inputSettings: {text: matchInformation.home}});
+    await obs.call("SetInputSettings", {inputName: rightTeamSource.sourceName, inputSettings: {text: matchInformation.away}});
+
+    // Update Preview
+    await obs.call("SetInputSettings", {inputName: gameType.sourceName, inputSettings: {text: matchInformation.title}});
+
+    await obs.call("SetInputSettings", {inputName: leftTeamPreview.sourceName, inputSettings: {text: matchInformation.home}});
+    await obs.call("SetInputSettings", {inputName: rightTeamPreview.sourceName, inputSettings: {text: matchInformation.away}});
+}
+
+// --------------------
+// - Timer Management -
+// --------------------
+
 function startTimer() {
     // Starts the timer or continues it at current point
     if (isRunning) {
@@ -185,12 +262,14 @@ function makeStopNoise() {
     // Start stop-sound
 }
 
-// DB Management
+// -----------------
+// - DB Management -
+// -----------------
 function fetchMatches() {
     return JSON.parse(fs.readFileSync("matches.json")).matches;
 }
 
-function setMatch(matchTitle, home, away) {
+function addMatch(matchTitle, home, away) {
     matchesData.push([ matchTitle, home, away ]);
     
     syncJsonData();
@@ -207,9 +286,11 @@ function syncJsonData() {
     });
 }
 
-function makeNextMatch(matchIndex) {
-    
-}
 
+matchesData = fetchMatches();
+loadGameData(0);
 runTimer();
+nextGame();
+nextGame();
+increaseLeftScore();
 //setMatch("Achtelfinaleee", "Bananenplantage", "Cocoa gr333n");
