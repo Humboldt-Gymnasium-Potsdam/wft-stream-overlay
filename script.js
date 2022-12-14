@@ -17,7 +17,7 @@ const get = async (path) => {
 const post = async (path, body)  =>{
     return fetch(getUrl(path), {
         method: "POST",
-        body: body,
+        body: JSON.stringify(body),
         headers: {
             "accept": "application/json",
             "content-type": "application/json"
@@ -28,7 +28,7 @@ const post = async (path, body)  =>{
 const delete1 = async (path, body)  => {
     return fetch(getUrl(path), {
         method: "DELETE",
-        body: body,
+        body: JSON.stringify(body),
         headers: {
             "accept": "application/json",
             "content-type": "application/json"
@@ -81,7 +81,7 @@ const setNextMatch = async (matchId) => {
     return true;
 }
 
-const setNextMatch = async (matchId) => {
+const deleteMatch = async (matchId) => {
     response = await delete1("/api/deleteMatch", {
         matchId: matchId
     });
@@ -175,40 +175,6 @@ async function getGameStatus() {
     return await response.text();;
 }
 
-async function updateGameStatusUI() {
-    document.getElementById("game-status").innerHTML = await getGameStatus();
-}
-
-/* Game Control Buttons */
-document.querySelector("#start-game-button").addEventListener("click", async () => {
-    await startMatch();
-    await updateGameStatusUI();
-});
-
-document.querySelector("#reset-game-button").addEventListener("click", async () => {
-    await resetTimer();
-    await updateGameStatusUI();
-});
-
-document.querySelector("#pause-game-button").addEventListener("click", async () => {
-    await pauseGame();
-    await updateGameStatusUI();
-});
-
-document.querySelector("#next-game-animation-button").addEventListener("click", async () => {
-    await nextGameAnimation();
-    await updateGameStatusUI();
-});
-
-document.querySelector("#game-preview-scene-button").addEventListener("click", async () => {
-    await gamePreviewScene();
-    await updateGameStatusUI();
-});
-
-document.querySelector("#timer-submit-button").addEventListener("click", async () => {
-    await setTimer(document.getElementById("timer-input").value);
-    await updateTimer();
-});
 
 const updateTimer = async () => {
     document.getElementById("timer").innerHTML = await getTimer();
@@ -285,6 +251,7 @@ const fillMatchTable =  (matches) => {
             let matchTeamInput = document.createElement("input");
             matchTeamInput.type = "text";
             matchTeamInput.value = team;
+            matchTeamElement.appendChild(matchTeamInput);
             matchElement.appendChild(matchTeamElement);
         })
 
@@ -304,14 +271,16 @@ const fillMatchTable =  (matches) => {
         });
 
         let setNextMatchButton = document.createElement("button");
-        updateButton.classList.add("btn", "btn-primary");
-        updateButton.style.marginRight = "10px";
-        updateButton.innerHTML = "Set Next Match";
-        updateButton.addEventListener("click", async () => {
+        setNextMatchButton.innerHTML = "Make next match";
+        setNextMatchButton.classList.add("btn", "btn-primary");
+        setNextMatchButton.style.marginRight = "10px";
+        setNextMatchButton.innerHTML = "Set Next Match";
+        setNextMatchButton.addEventListener("click", async () => {
             await setNextMatch(match.id);
         });
 
         let deleteMatchButton = document.createElement("button");
+        deleteMatchButton.innerHTML = "Delete";
         deleteMatchButton.classList.add("btn", "btn-primary");
         deleteMatchButton.addEventListener("click", async () => {
             await deleteMatch(match.id);
@@ -323,17 +292,6 @@ const fillMatchTable =  (matches) => {
     });
 }
 
-document.querySelector("#add-new-match-button").addEventListener("click", async () => {
-    let title = document.getElementById("match-title-input").value;
-    let home = document.querySelector("#new-match-home").value;
-    let away = document.querySelector("#new-match-away").value;
-    await addMatch({
-        title: title,
-        home: home,
-        away: away
-    });
-    await updateMatchesTable();
-});
 
 async function setScore(matchId, team, score) {
     response = await post("/api/setScore", {
@@ -373,6 +331,65 @@ const initPage = () => {
     updateMatchesTable();
     updateGameStatusUI();
     updateTimer();
+
+    // EXAMPLES
+    updateMatchUI({
+        home: "Home",
+        homeScore: 2,
+        away: "Away",
+        awayScore: 1
+    });
+    fillMatchTable([{"id": 1, title: "test1", "home": "test", away: "away"}]);
 };
 
 initPage();
+
+
+async function updateGameStatusUI() {
+    document.getElementById("game-status").innerHTML = await getGameStatus();
+}
+
+/* Game Control Buttons */
+document.querySelector("#start-game-button").addEventListener("click", async () => {
+    await startMatch();
+    await updateGameStatusUI();
+});
+
+document.querySelector("#reset-game-button").addEventListener("click", async () => {
+    await resetTimer();
+    await updateGameStatusUI();
+});
+
+document.querySelector("#pause-game-button").addEventListener("click", async () => {
+    await pauseGame();
+    await updateGameStatusUI();
+});
+
+document.querySelector("#next-game-animation-button").addEventListener("click", async () => {
+    await nextGameAnimation();
+    await updateGameStatusUI();
+});
+
+document.querySelector("#add-new-match-button").addEventListener("click", async () => {
+    console.log("hello");
+    let title = document.getElementById("match-title-input").value;
+    let home = document.querySelector("#match-home-team-input").value;
+    let away = document.querySelector("#match-away-team-input").value;
+    await addMatch({
+        title: title,
+        home: home,
+        away: away
+    });
+    await updateMatchesTable();
+});
+
+
+document.querySelector("#game-preview-scene-button").addEventListener("click", async () => {
+    await gamePreviewScene();
+    await updateGameStatusUI();
+});
+
+document.querySelector("#timer-submit-button").addEventListener("click", async () => {
+    await setTimer(document.getElementById("timer-input").value);
+    await updateTimer();
+});
