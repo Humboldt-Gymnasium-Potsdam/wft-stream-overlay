@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Scoreboard OBS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+
+<body>
+    <div id="content-wrapper">
+        <div id="score">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Reduce</th>
+                            <th>Score</th>
+                            <th>Add</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="home-row-current">
+                            <td id="home-team-name">Team A</td>
+                            <td><button class="btn btn-primary" id="home-goal-minus-button" type="button">Reduce</button></td>
+                            <td>
+                                <div ><span id="home-team-score" style="font-size: 30px;padding: 0;text-align: center;">0</span></div>
+                            </td>
+                            <td><button class="btn btn-primary" id="home-goal-add-button" type="button">Add</button></td>
+                        </tr>
+                        <tr id="away-row-current">
+                            <td id="away-team-name">Team B</td>
+                            <td><button class="btn btn-primary" id="away-goal-minus-button" type="button">Reduce</button></td>
+                            <td>
+                                <div><span id="away-team-score" style="font-size: 30px;padding: 0;text-align: center;">0</span></div>
+                            </td>
+                            <td><button class="btn btn-primary" id="away-goal-add-button" type="button">Add</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="game-control">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title text-center">Game Status</h4>
+                    <h6 class="text-muted card-subtitle mb-2 text-center" id="game-status">Paused</h6>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body game-control-div">
+                    <h4 class="card-title">Game Control</h4>
+                    <div><input id="timer-input" type="time"><button class="btn btn-primary" id="timer-submit-button" type="time" style="margin-left: 15px;">Set Time</button></div>
+                    <div class="button-box"><button class="btn btn-primary" id="start-game-button" type="button" style="margin: 10px;">Start</button><button class="btn btn-primary" id="reset-game-button" type="button" style="margin: 10px;">Reset</button><button class="btn btn-primary" id="pause-game-button" type="button" style="margin: 10px;">Pause</button><button class="btn btn-primary" id="next-game-animation-button" type="button" style="margin: 10px;">Show Next Game</button></div>
+                </div>
+            </div>
+        </div>
+        <div id="matches-overview">
+            <div class="card">
+                <div class="card-body game-control-div">
+                    <div class="table-responsive" id="matches-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Match Title</th>
+                                    <th>Home Team</th>
+                                    <th>Away Team</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="team-input-wrapper"><input type="text" id="match-title-input" placeholder="Match title" style="margin-right: 10px;"><input type="text" id="match-home-team-input" placeholder="Home Team" style="margin-right: 10px;"><input type="text" id="match-away-team-input" placeholder="Away Team" style="margin-right: 10px;"><button class="btn btn-primary" id="add-new-match-button" type="button">Add Match</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="http://localhost:8000/static/js/script.js"></script>
+</body>
+
+</html>
