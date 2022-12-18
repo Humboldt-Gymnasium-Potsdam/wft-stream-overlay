@@ -43,8 +43,8 @@ const delete1 = async (path, body)  => {
 
 const getMatches = async () => {
     response = await get("/api/matches");
-    matches = await response.json();
-    return matches;
+    matchesData = await response.json();
+    return matchesData;
 }
 
 
@@ -55,7 +55,7 @@ async function setTimer(timer) {
     response = await post("/api/setTimer", {
         timer: timer
     });
-    if (response.status !== 204) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to set timer!")
         return false;
     }
@@ -65,7 +65,7 @@ async function setTimer(timer) {
 
 const getTimer = async () => {
     response = await get("/api/getTimer");
-    if (response.status !== 200) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to get timer!");
         return "";
     }
@@ -77,7 +77,7 @@ const setNextMatch = async (matchId) => {
     response = await post("/api/setNextMatch", {
         matchId: matchId
     });
-    if (response.status !== 201) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to set next match!")
         return false;
     }
@@ -86,10 +86,10 @@ const setNextMatch = async (matchId) => {
 }
 
 const deleteMatch = async (matchId) => {
-    response = await delete1("/api/deleteMatch", {
+    response = await post("/api/deleteMatch", {
         matchId: matchId
     });
-    if (response.status !== 201) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to delete match!")
         return false;
     }
@@ -98,18 +98,19 @@ const deleteMatch = async (matchId) => {
 }
 
 const updateMatch = async (match) => {
-    response = await post("/api/updateMatch", (match));
-    if (response.status !== 204) {
+    response = await post("/api/updateMatch", match);
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to update match!")
         return false;
     }
     console.log("Updated match!")
+
     return true;
 };
 
 const addMatch = async (match) => {
-    response = await post("/api/addMatch", (match));
-    if (response.status !== 201) {
+    response = await post("/api/addMatch", match);
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to add match!")
         return false;
     }
@@ -123,7 +124,7 @@ const resetTimer = async () => {
 };
 const startMatch = async () => {
     response = await post("/api/startMatch", {});
-    if (response.status !== 204) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to start match!")
         return false;
     }
@@ -133,7 +134,7 @@ const startMatch = async () => {
 
 const nextGameAnimation = async() => {
     response = await post("/api/nextGame", {});
-    if (response.status !== 201) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to show next game animation!")
         return false;
     }
@@ -143,7 +144,7 @@ const nextGameAnimation = async() => {
 
 const gamePreviewScene = async() => {
     response = await post("/api/gamePreviewScene", {});
-    if (response.status !== 201) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to show game preview scene!")
         return false;
     }
@@ -153,33 +154,22 @@ const gamePreviewScene = async() => {
 
 async function pauseGame() {
     const response = await post("/api/pauseMatch", {});
-    if (response.status !== 204) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to pause game!");
         return false;
     }
 
-    const result = await response.json();
-    if (result.success) {
-        console.log("Paused game!");
-        return true;
-    }
-    console.log("Failed to pause game!");
-    return false;
+    return true;
 }
 
 async function getGameStatus() {
     const response = await get("/api/getMatchStatus");
-    if (response.status !== 200) {
+    if (!response.status.toString().startsWith("2")) {
         return "unknown";
     }
 
     return await response.text();;
 }
-
-
-const updateTimer = async () => {
-    document.getElementById("timer").innerHTML = await getTimer();
-};
 
 async function getMatch(matchId) {
     const response = await get("/api/getMatch?id=" + matchId)
@@ -207,17 +197,24 @@ async function updateMatchUI(matchData) {
 }
 
 async function updateMatchesTable() {
-    const matches = await getMatches();
-    fillMatchTable(matches);
+    const matchesData = await getMatches();
+
+    clearMatchTable();
+    fillMatchTable(matchesData);
 }
 
-const fillMatchTable =  (matches) => {
+const clearMatchTable = () => {
+    let matchesTable = document.getElementById("matches-table").querySelector("tbody");
+    matchesTable.innerHTML = "";
+}
+
+const fillMatchTable =  (matchesData) => {
     // Table on bottom
     let matchesTable = document.getElementById("matches-table").querySelector("tbody");
-    matches.forEach(match => {
+    matchesData.matches.forEach((match, index) => {
 
         let matchElement = document.createElement("tr");
-        matchElement.id = match.id;
+        matchElement.id = index;
 
 
         [match.title, match.home, match.away].forEach(team => {
@@ -235,13 +232,17 @@ const fillMatchTable =  (matches) => {
         updateButton.style.marginRight = "10px";
         updateButton.innerHTML = "Update";
         updateButton.addEventListener("click", async () => {
-            let home = matchElement.querySelector("input").value;
-            let away = matchElement.querySelectorAll("input")[1].value;
+            let title = matchElement.querySelectorAll("input")[0].value;
+            let home = matchElement.querySelectorAll("input")[1].value;
+            let away = matchElement.querySelectorAll("input")[2].value;
             await updateMatch({
-                id: match.id,
+                id: index,
+                title: title,
                 home: home,
                 away: away
             });
+
+            await updateCurrentMatch();
         });
 
         let setNextMatchButton = document.createElement("button");
@@ -250,19 +251,21 @@ const fillMatchTable =  (matches) => {
         setNextMatchButton.style.marginRight = "10px";
         setNextMatchButton.innerHTML = "Set Next Match";
         setNextMatchButton.addEventListener("click", async () => {
-            await setNextMatch(match.id);
+            await setNextMatch(index);
+            await updateMatchesTable();
         });
 
         let deleteMatchButton = document.createElement("button");
         deleteMatchButton.innerHTML = "Delete";
         deleteMatchButton.classList.add("btn", "btn-primary");
         deleteMatchButton.addEventListener("click", async () => {
-            await deleteMatch(match.id);
+            await deleteMatch(index);
+            await updateMatchesTable();
         });
 
         buttonTableCell.append(updateButton, setNextMatchButton, deleteMatchButton);
-        matchElement.append(buttonTableCell)
-        matchesTable.append(matchElement)
+        matchElement.append(buttonTableCell);
+        matchesTable.append(matchElement);
     });
 }
 
@@ -271,7 +274,7 @@ async function addScore(team) {
         team: team,
     })
 
-    if (response.status !== 200) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to set new score!")
         return false;
     }
@@ -282,7 +285,7 @@ async function reduceScore(team) {
         team: team,
     })
 
-    if (response.status !== 200) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to set new score!")
         return false;
     }
@@ -290,7 +293,7 @@ async function reduceScore(team) {
 
 async function getScore() {
     response = await get("/api/getScore");
-    if (response.status !== 200) {
+    if (!response.status.toString().startsWith("2")) {
         console.log("Failed to get score!");
         return false;
     }
@@ -312,16 +315,14 @@ const initPage = () => {
     updateCurrentMatch();
     updateMatchesTable();
     updateGameStatusUI();
-    updateTimer();
 
     // EXAMPLES
     updateMatchUI({
         home: "Home",
-        homeScore: 2,
+        homeScore: 0,
         away: "Away",
-        awayScore: 1
+        awayScore: 0
     });
-    fillMatchTable([{"id": 1, title: "test1", "home": "test", away: "away"}]);
 };
 
 initPage();
@@ -350,10 +351,10 @@ document.querySelector("#pause-game-button").addEventListener("click", async () 
 document.querySelector("#next-game-animation-button").addEventListener("click", async () => {
     await nextGameAnimation();
     await updateGameStatusUI();
+    await updateCurrentMatch();
 });
 
 document.querySelector("#add-new-match-button").addEventListener("click", async () => {
-    console.log("hello");
     let title = document.getElementById("match-title-input").value;
     let home = document.querySelector("#match-home-team-input").value;
     let away = document.querySelector("#match-away-team-input").value;
@@ -366,8 +367,8 @@ document.querySelector("#add-new-match-button").addEventListener("click", async 
 });
 
 document.querySelector("#timer-submit-button").addEventListener("click", async () => {
+    console.log(document.getElementById("timer-input").value)
     await setTimer(document.getElementById("timer-input").value);
-    await updateTimer();
 });
 
 document.querySelector("#home-goal-minus-button").addEventListener("click", async () => {

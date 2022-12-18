@@ -1,12 +1,12 @@
 {
-  "name": "obsscoreboard",
+  "name": "wft-stream-overlay",
   "version": "1.0.0",
-  "description": "wallah guht diese",
+  "description": "Scoreboard-stream-overlay management system for Open Broadcaster Software",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "author": "",
+  "author": "diesdasnicolas and fr-edy",
   "type": "module",
   "license": "ISC",
   "dependencies": {
