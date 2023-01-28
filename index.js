@@ -23,14 +23,12 @@ let rightScore = 0;
 let timerMinutes = 0;
 let timerSeconds = 0;
 
-let timerResetted = false;
+let timerReset = false;
 let timerPaused = false;
 let timerEnded = false;
 let isRunning = false;
 
 // UI variables
-let indexFile;
-
 await obs.connect('ws://localhost:4455');
 
 const overlayScene = await obs.call("GetSceneItemList", {sceneName: "OverlayScene"});
@@ -198,7 +196,7 @@ app.get("/api/getMatchStatus", function (req, res) {
     else if (timerEnded)
         gameStatus = "Game Ended";
 
-    else if (timerResetted)
+    else if (timerReset)
         gameStatus = "Game Ready";
     
     else if (isRunning) 
@@ -290,44 +288,48 @@ async function increaseLeftScore() {
     leftScore++;
 
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName, inputSettings: {text: leftScore + " : " + rightScore}});
+    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
+        inputSettings: {text: leftScore + " : " + rightScore}});
 }
 
 async function increaseRightScore() {
     rightScore++;
     
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName, inputSettings: {text: leftScore + " : " + rightScore}});
+    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
+        inputSettings: {text: leftScore + " : " + rightScore}});
 }
 
 async function decreaseLeftScore() {
-    if (leftScore == 0) {
+    if (leftScore === 0) {
         return;
     }
 
     leftScore--;
 
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName, inputSettings: {text: leftScore + " : " + rightScore}});
+    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
+        inputSettings: {text: leftScore + " : " + rightScore}});
 }
 
 async function decreaseRightScore() {
-    if (rightScore == 0) {
+    if (rightScore === 0) {
         return;
     }
 
     rightScore--;
 
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName, inputSettings: {text: leftScore + " : " + rightScore}});
+    await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
+        inputSettings: {text: leftScore + " : " + rightScore}});
 }
 
 async function setCurrentTeams(teamData) {
-    teamInformation = teamData;
-
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: leftTeamSource.sourceName, inputSettings: {text: teamInformation[1]}});
-    await obs.call("SetInputSettings", {inputName: rightTeamSource.sourceName, inputSettings: {text: teamInformation[2]}});
+    await obs.call("SetInputSettings", {inputName: leftTeamSource.sourceName,
+        inputSettings: {text: teamData[1]}});
+    await obs.call("SetInputSettings", {inputName: rightTeamSource.sourceName,
+        inputSettings: {text: teamData[2]}});
 }
 
 async function hintNextMatch() {
@@ -348,14 +350,19 @@ async function loadGameData(matchIndex) {
     const matchInformation = matchesData[matchIndex];
 
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: leftTeamSource.sourceName, inputSettings: {text: matchInformation.home}});
-    await obs.call("SetInputSettings", {inputName: rightTeamSource.sourceName, inputSettings: {text: matchInformation.away}});
+    await obs.call("SetInputSettings", {inputName: leftTeamSource.sourceName,
+        inputSettings: {text: matchInformation.home}});
+    await obs.call("SetInputSettings", {inputName: rightTeamSource.sourceName,
+        inputSettings: {text: matchInformation.away}});
 
     // Update Preview
-    await obs.call("SetInputSettings", {inputName: gameType.sourceName, inputSettings: {text: matchInformation.title}});
+    await obs.call("SetInputSettings", {inputName: gameType.sourceName,
+        inputSettings: {text: matchInformation.title}});
 
-    await obs.call("SetInputSettings", {inputName: leftTeamPreview.sourceName, inputSettings: {text: matchInformation.home}});
-    await obs.call("SetInputSettings", {inputName: rightTeamPreview.sourceName, inputSettings: {text: matchInformation.away}});
+    await obs.call("SetInputSettings", {inputName: leftTeamPreview.sourceName,
+        inputSettings: {text: matchInformation.home}});
+    await obs.call("SetInputSettings", {inputName: rightTeamPreview.sourceName,
+        inputSettings: {text: matchInformation.away}});
 }
 
 // --------------------
@@ -378,7 +385,7 @@ function pauseTimer() {
 
 async function resetTimer() {
     timerPaused = false;
-    timerResetted = true;
+    timerReset = true;
     timerEnded = false;
     isRunning = false;
 
@@ -392,17 +399,18 @@ async function resetTimer() {
         seconds = "0" + seconds;
     }
 
-    await obs.call("SetInputSettings", {inputName: timerSource.sourceName, inputSettings: {text: timerMinutes + ":" + seconds}});
+    await obs.call("SetInputSettings", {inputName: timerSource.sourceName,
+        inputSettings: {text: timerMinutes + ":" + seconds}});
 }
 
 async function runTimer() {
     resetTimer();
 
     isRunning = true;
-    timerResetted = false;
+    timerReset = false;
 
     while (true) {
-        if (timerResetted || timerEnded)
+        if (timerReset || timerEnded)
             break;
 
         await new Promise(resolve => setTimeout(resolve, 1_000));
@@ -413,7 +421,7 @@ async function runTimer() {
         // console.log(timerMinutes + ":" + timerSeconds);
 
         // Check if no minute is over
-        if (timerSeconds != 0) {
+        if (timerSeconds !== 0) {
             timerSeconds--;
             setTime();
 
@@ -421,7 +429,7 @@ async function runTimer() {
         }
 
         // Check if the time is not over
-        if (timerMinutes != 0) {
+        if (timerMinutes !== 0) {
             timerMinutes--;
             timerSeconds = 59;
             setTime();
@@ -449,7 +457,8 @@ async function setTime() {
     }
 
     // Update Overlay
-    await obs.call("SetInputSettings", {inputName: timerSource.sourceName, inputSettings: {text: timerMinutes + ":" + seconds}});
+    await obs.call("SetInputSettings", {inputName: timerSource.sourceName,
+        inputSettings: {text: timerMinutes + ":" + seconds}});
 }
 
 function makeStopNoise() {
@@ -477,7 +486,7 @@ function removeMatch(matchId) {
     if (currentGameIndex > matchId)
         currentGameIndex--;
 
-        matchesData.splice(matchId, 1)[0];
+    matchesData.splice(matchId, 1)[0];
 
     syncJsonData();
 }
@@ -519,5 +528,3 @@ function syncJsonData() {
         return true;
     });
 }
-
-//setMatch("Achtelfinaleee", "Bananenplantage", "Cocoa gr333n");
