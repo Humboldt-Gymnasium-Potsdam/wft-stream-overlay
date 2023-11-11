@@ -28,6 +28,12 @@ let timerPaused = false;
 let timerEnded = false;
 let isRunning = false;
 
+// (Discord) Liveticker variables
+const liveTickerIp = "http://";  // Include ip address/domain of live ticker server
+
+const liveTickerNextGameUrl = liveTickerIp + "/nextGame";
+const liveTickerUpdateGameUrl = liveTickerIp + "/updateGame";
+
 // UI variables
 await obs.connect('ws://localhost:4455');
 
@@ -61,7 +67,6 @@ app.use(express.urlencoded({ extended: true }));
 // Api Calls
 
 app.get("/" || "", function (req, res) {
-    console.log("rooot")
     res.sendFile("html/index.html", {root: __dirname});
 });
 
@@ -290,6 +295,8 @@ async function increaseLeftScore() {
     // Update Overlay
     await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
         inputSettings: {text: leftScore + " : " + rightScore}});
+
+    // Update live ticker data
 }
 
 async function increaseRightScore() {
@@ -298,6 +305,8 @@ async function increaseRightScore() {
     // Update Overlay
     await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
         inputSettings: {text: leftScore + " : " + rightScore}});
+    
+    // Update live ticker data
 }
 
 async function decreaseLeftScore() {
@@ -310,6 +319,8 @@ async function decreaseLeftScore() {
     // Update Overlay
     await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
         inputSettings: {text: leftScore + " : " + rightScore}});
+    
+    // Update live ticker data
 }
 
 async function decreaseRightScore() {
@@ -322,6 +333,8 @@ async function decreaseRightScore() {
     // Update Overlay
     await obs.call("SetInputSettings", {inputName: scoreSource.sourceName,
         inputSettings: {text: leftScore + " : " + rightScore}});
+
+    // Update live ticker data
 }
 
 async function setCurrentTeams(teamData) {
@@ -344,6 +357,8 @@ async function nextGame() {
     
     currentGameIndex++;
     await loadGameData(currentGameIndex);
+
+    // Update live ticker data
 }
 
 async function loadGameData(matchIndex) {
@@ -375,6 +390,8 @@ function startTimer() {
         timerPaused = false;
         return;
     }
+
+    // Update live ticker data
 
     runTimer();
 } 
